@@ -9,6 +9,7 @@ class Earth():
     self.G = 6.673 * (10 ** (-11))
     self.M = 5.972 * (10 ** 24)
     self.radius = 6371000
+    self.Oz = [0, 0, 1]
 
     self.stratosphere_radius = self.radius + 50000
     
@@ -17,7 +18,7 @@ class Earth():
   
   def draw_me(self):
     # Open Image in PIL
-    bm = PIL.Image.open('drive/MyDrive/earthicefreesm.jpg') 
+    bm = PIL.Image.open('data/earthicefreesm.jpg') 
     bm = np.array(bm.resize([d * 2 // 1 for d in bm.size]))/256
 
     # Create Earth with texture
@@ -49,32 +50,34 @@ class Earth():
     self.ax.plot_wireframe(x_stratosphere, y_stratosphere, z_stratosphere, linewidth=1, alpha=0.3)
 
   def return_data(self):
-    return self.G, self.M, self.radius, self.stratosphere_radius
+    return self.G, self.M, self.radius, self.stratosphere_radius, self.Oz
 
 
 class Satellite():
   def __init__(self):
-    self.mass = 0
+    self.mass = 457 * (10 ** 3)
     self.height = 0
-    self.velocity = 0
-    self.time = 0
+    self.velocity = 7654
+    self.time = 90 * 60
+    self.North = float(input()) * np.pi / 180
+    self.East = float(input())  * np.pi / 180
+
+    self.init_pos = [np.cos(self.North) * np.cos(self.East),
+    np.cos(self.North) * np.sin(self.East),
+    np.sin(self.North)]
 
   def return_data(self):
-    return self.mass, self.height, self.velocity, self.time
+    return self.mass, self.height, self.velocity, self.time, self.init_pos
 
 
-Oz = [0, 0, 1]
 
-North = -43.07 * np.pi / 180
-East = -61.5  * np.pi / 180
-
-init_pos = [np.cos(North) * np.cos(East),
-            np.cos(North) * np.sin(East), 
-            np.sin(North)]
 
 #Satellite_orbit = 0
 
-Satellite()
-Earth()
+S = Satellite()
+E = Earth()
+
+print(S.return_data())
+print(E.return_data())
 
 plt.show()
