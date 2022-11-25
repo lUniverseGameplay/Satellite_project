@@ -2,6 +2,7 @@ import PIL
 import matplotlib.pyplot as plt
 import numpy as np
 from mpl_toolkits.mplot3d import Axes3D
+from orbit import get_orbit
 
 
 class Earth():
@@ -64,6 +65,17 @@ class Satellite():
     np.cos(self.North) * np.sin(self.East),
     np.sin(self.North)]
 
+    self.orbit_norm = get_orbit(self.init_pos, False)
+    self.tau = np.cross(self.orbit_norm, self.init_pos) + [0.5 * i for i in self.orbit_norm]
+
+    r0 = [i * (E_data[2] + self.ISS_height) for i in self.init_pos]
+    v0 = self.tau * self.ISS_velocity
+
+    tspan = np.linspace(0, 3 * self.time, 10 ** 5)
+    x0 = [r0, v0]
+    
+    #self.odefun = lambda t, x: [x(4:6), -1 * E_data[0] * E_data[1] * x(1:3) / ((norm(x(1:3)))^3)]
+
     self.draw_self_orbit(ax, E_data)
 
   def draw_self_orbit(self, ax, E_data):
@@ -77,7 +89,8 @@ class Satellite():
     Y = np.array([R1 * np.sin(2 * np.pi * w / T1) for w in t])
     Z = np.array([w * 0 for w in t])
 
-    ax.plot(X, Y, Z, '-k', label='Satellite-axis', color='r')
+    ax.plot(X, Y, Z, label='Satellite-orbit', color='r')
+    ax.legend()
     
   
   def return_data(self):
