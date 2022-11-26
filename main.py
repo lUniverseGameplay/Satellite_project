@@ -74,7 +74,7 @@ class Satellite():
     tspan = np.linspace(0, 3 * self.time, 10 ** 5)
     x0 = [r0, v0]
     
-    #self.odefun = lambda t, x: [x(4:6), -1 * E_data[0] * E_data[1] * x(1:3) / ((norm(x(1:3)))^3)]
+    self.odefun = lambda t, x: [x[4:6], [-1 * E_data[0] * E_data[1] * i / ((np.norm(i)) ** 3) for i in x[1:3]]]
 
     self.draw_self_orbit(ax, E_data)
 
