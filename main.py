@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from mpl_toolkits.mplot3d import Axes3D
 from orbit import get_orbit
+from scipy.integrate import odeint
 
 
 class Earth():
@@ -66,15 +67,22 @@ class Satellite():
     np.sin(self.North)]
 
     self.orbit_norm = get_orbit(self.init_pos, False)
+
     self.tau = np.cross(self.orbit_norm, self.init_pos) + [0.5 * i for i in self.orbit_norm]
 
-    r0 = [i * (E_data[2] + self.ISS_height) for i in self.init_pos]
-    v0 = self.tau * self.ISS_velocity
+    r0 = np.asarray([i * (E_data[2] + self.height) for i in self.init_pos])
+    v0 = self.tau * self.velocity
 
     tspan = np.linspace(0, 3 * self.time, 10 ** 5)
     x0 = [r0, v0]
+
+    print(x0)
     
-    self.odefun = lambda t, x: [x[4:6], [-1 * E_data[0] * E_data[1] * i / ((np.norm(i)) ** 3) for i in x[1:3]]]
+    self.odefun = lambda t, x: [x[4:6], [-1 * E_data[0] * E_data[1] * i / ((np.linalg.norm(i)) ** 3) for i in x[1:3]]]
+
+    #print(type(tspan), tspan[0], sep="\n")
+
+    #[t, x] = odeint(self.odefun, x0, tspan)
 
     self.draw_self_orbit(ax, E_data)
 
@@ -107,7 +115,7 @@ ax = fig.add_subplot(111, projection='3d')
 E = Earth(ax)
 S = Satellite(ax, E.return_data())
 
-print(S.return_data())
-print(E.return_data())
+#print(S.return_data())
+#print(E.return_data())
 
 plt.show()
