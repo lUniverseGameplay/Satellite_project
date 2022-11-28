@@ -75,14 +75,14 @@ class Satellite():
 
     tspan = np.linspace(0, 3 * self.time, 10 ** 5)
     x0 = [r0, v0]
-
-    print(x0)
     
-    self.odefun = lambda t, x: [x[4:6], [-1 * E_data[0] * E_data[1] * i / ((np.linalg.norm(i)) ** 3) for i in x[1:3]]]
+    self.odefun = lambda t, x: [np.asarray(x[1]), np.asarray([-1 * E_data[0] * E_data[1] * i / ((np.linalg.norm(i)) ** 3) for i in x[0]])]
 
-    #print(type(tspan), tspan[0], sep="\n")
+    #print(self.odefun(tspan[0], x0))
 
-    #[t, x] = odeint(self.odefun, x0, tspan)
+    [t, x] = odeint(self.odefun, tspan, x0)
+
+    print([t, x])
 
     self.draw_self_orbit(ax, E_data)
 
