@@ -2,8 +2,32 @@ import PIL
 import matplotlib.pyplot as plt
 import numpy as np
 from mpl_toolkits.mplot3d import Axes3D
-from orbit import get_orbit
 from scipy.integrate import odeint
+import math
+
+
+def odefun(x: np.ndarray, t: float):
+    p = np.array([np.array(x[3:6]), np.array([-1 * 6.673 * (10 ** (-11)) * 5.972 * (10 ** 24) * i / ((np.linalg.norm(i)) ** 3) for i in x[0:3]])])
+    return [p[0][0], p[0][1], p[0][2], p[1][0], p[1][1], p[1][2]]
+
+def get_orbit(r, sol):
+    phi = 51.6 * np.pi / 180
+    p1 = -r[1] / r[0]
+    p2 = -np.cos(phi) * r[2] / r[0]
+    a = p1 ** 2 + 1
+    b = 2 * p1 * p2
+    c = p2 ** 2 - np.sin(phi) * np.sin(phi)
+    y1 = (-b + math.sqrt(b ** 2 - 4 * a * c)) / (2 * a)
+    y2 = (-b - math.sqrt(b ** 2 - 4 * a * c)) / (2 * a)
+    x1 = p1 * y1 + p2
+    x2 = p1 * y2 + p2
+    z = np.cos(phi)
+    n1 = [x1, y1, z]
+    n2 = [x2, y2, z]
+    if sol:
+        return n1
+    else:
+        return n2
 
 
 class Earth():
@@ -74,11 +98,15 @@ class Satellite():
     v0 = self.tau * self.velocity
 
     tspan = np.linspace(0, 3 * self.time, 10 ** 5)
-    x0 = np.double(r0, v0)
+    x0 = [int(r0[0]), int(r0[1]), int(r0[2]), int(v0[0]), int(v0[1]), int(v0[2])]
 
-    self.odefun = lambda t, x: [np.asarray(x[1]), np.asarray([-1 * E_data[0] * E_data[1] * i / ((np.linalg.norm(i)) ** 3) for i in x[0]])]
+    #odefun = lambda t, x: [np.asarray(x[1]), np.asarray([-1 * E_data[0] * E_data[1] * i / ((np.linalg.norm(i)) ** 3) for i in x[0]])]
 
-    [t, x] = odeint(self.odefun, tspan, x0)
+    #xd = odeint(odefun, x0, tspan)
+
+    tx = odeint(odefun, x0, tspan)
+    
+    print(tx[0])
 
     self.draw_self_orbit(ax, E_data)
 
