@@ -7,7 +7,7 @@ import math
 
 
 def odefun(x: np.ndarray, t: float):
-  p = np.array([np.array(x[3:6]), np.array([-1 * 6.673 * (10 ** (-11)) * 5.972 * (10 ** 24) * i / ((np.linalg.norm(i)) ** 3) for i in x[0:3]])])
+  p = np.array([np.array(x[3:6]), np.array([-1 * 6.673 * (10 ** (-11)) * 5.972 * (10 ** 24) * i / (round((np.linalg.norm(x[:3])), 4) ** 3) for i in x[0:3]])])
   return [p[0][0], p[0][1], p[0][2], p[1][0], p[1][1], p[1][2]]
   
 def rotz(gamma):
@@ -131,7 +131,7 @@ class Satellite():
 
       trajectory_corrected[i] = [current_point_corrected[i][i] for i in range(len(current_point_corrected))]
 
-      file_log.write(str(trajectory_corrected[i]))
+      file_log.write(str([int(self.x[i][0]), int(self.x[i][1]), int(self.x[i][2]), int(self.x[i][3]), int(self.x[i][4]), int(self.x[i][5])]))
       file_log.write('\n')
 
       kinetic_enegry[i] = 0.5 * self.mass * np.dot(velocity[i], velocity[0])
