@@ -10,8 +10,9 @@ def rounder(lst):
   return [round(i, 4) for i in lst]
 
 def odefun(x: np.ndarray, t: float):
-  p = np.array([np.array(x[3:6]), np.array([-1 * 6.673 * (10 ** (-11)) * 5.972 * (10 ** 24) * i / (round((np.linalg.norm(x[:3])), 4) ** 3) for i in x[0:3]])])
-  return [p[0][0], p[0][1], p[0][2], p[1][0], p[1][1], p[1][2]]
+  p1 = np.array(x[3:6])
+  p = np.array([-1 * G * M * i / (round((np.linalg.norm(x[:3])), 4) ** 3) for i in x[0:3]])
+  return [p1[0], p1[1], p1[2], p[0], p[1], p[2]]
   
 def rotz(gamma):
   return [[np.cos(gamma), np.sin(gamma) * -1, 0], [np.sin(gamma), np.cos(gamma), 0], [0, 0, 1]]
@@ -113,6 +114,8 @@ S = Satellite(ax)
 Oz = [0, 0, 1]
 # self.North = float(input()) * np.pi / 180
 # self.East = float(input())  * np.pi / 180
+#North = round(-43.07 * np.pi / 180, 4)
+#East = round(-61.5  * np.pi / 180, 4)
 North = round(-43.07 * np.pi / 180, 4)
 East = round(-61.5  * np.pi / 180, 4)
 
@@ -124,13 +127,14 @@ orbit_norm = rounder(get_orbit(init_pos, False))
 
 tau = np.array(rounder(np.cross(orbit_norm, init_pos) + [0.5 * i for i in orbit_norm]))
 
-r0 = np.array([round(i * (E_radius + S.height) / (10 ** 6), 4) * (10 ** 6) for i in init_pos])
+r0 = np.array([round(i * (E_radius + S.height) / (10 ** 6), 4) * (10 ** 6) for i in init_pos]) #position
 
-v0 = tau * S.velocity
+v0 = tau * S.velocity #vector
+#v0 = [0, 0, tau[2] * S.velocity]
 
-print(v0)
+#print(v0)
 
-tspan = np.linspace(0, 3 * S.time, 10 ** 5)
+tspan = np.linspace(0, 1.6 * S.time, 10 ** 3)
 x0 = [int(r0[0]), int(r0[1]), int(r0[2]), int(v0[0]), int(v0[1]), int(v0[2])]
 
 #odefun = lambda t, x: [np.asarray(x[1]), np.asarray([-1 * E_data[0] * E_data[1] * i / ((np.linalg.norm(i)) ** 3) for i in x[0]])]
@@ -173,12 +177,17 @@ for i in range(len(tspan)):
     
 total_energy = potential_enegry + kinetic_enegry
 
-S.draw_self_orbit(ax, trajectory_corrected, x)
-
 #E.draw_me(ax)
 #E.draw_stratosphere(ax)
 
+S.draw_self_orbit(ax, trajectory_corrected, x)
+
 ax.scatter(0, 0, 0, marker='o', color='g')
+
+ax.scatter(10 ** 7, 10 ** 7, 10 ** 7, marker='o', color='k', alpha=0)
+ax.scatter(-10 ** 7, 10 ** 7, 10 ** 7, marker='o', color='k', alpha=0)
+ax.scatter(10 ** 7, -10 ** 7, 10 ** 7, marker='o', color='k', alpha=0)
+ax.scatter(-10 ** 7, -10 ** 7, 10 ** 7, marker='o', color='k', alpha=0)
 
 
 plt.show()
