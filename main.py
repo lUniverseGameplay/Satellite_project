@@ -1,9 +1,10 @@
 import PIL
 import matplotlib.pyplot as plt
 import numpy as np
-from mpl_toolkits.mplot3d import Axes3D
+from mpl_toolkits import mplot3d
 from scipy.integrate import odeint
 import math
+
 
 
 def rounder(lst):
@@ -60,7 +61,8 @@ class Earth():
     z = E_radius * np.outer(np.ones(np.size(lons)), np.sin(lats)).T
 
     # Plot the Earth
-    ax.plot_surface(x, y, z, rstride=4, cstride=4, facecolors=bm)
+    ax.plot_surface(x, y, z, rstride=4, cstride=4, alpha=0.4, facecolors=bm)
+    #ax.plot_surface(x, y, z, linewidth=1, alpha=0.3, color='g')
   
 
   def draw_stratosphere(self, ax):
@@ -130,14 +132,14 @@ tau = np.array(rounder(np.cross(orbit_norm, init_pos) + [0.5 * i for i in orbit_
 r0 = np.array([round(i * (E_radius + S.height) / (10 ** 6), 4) * (10 ** 6) for i in init_pos]) #position
 
 v0 = tau * S.velocity #vector
+v0 = np.array([int(i) for i in v0])
 #v0 = [0, 0, tau[2] * S.velocity]
 
 #print(v0)
 
-tspan = np.linspace(0, 1.6 * S.time, 10 ** 3)
+tspan = rounder(np.linspace(0, 3 * S.time, 10 ** 5))
+print(tspan[-1])
 x0 = [int(r0[0]), int(r0[1]), int(r0[2]), int(v0[0]), int(v0[1]), int(v0[2])]
-
-#odefun = lambda t, x: [np.asarray(x[1]), np.asarray([-1 * E_data[0] * E_data[1] * i / ((np.linalg.norm(i)) ** 3) for i in x[0]])]
 
 #xd = odeint(odefun, x0, tspan)
 
@@ -156,7 +158,7 @@ potential_enegry = np.zeros(np.shape(trajectory)[0])
 for i in range(len(tspan)):
   current_time = tspan[i]
   #print(current_time)
-  angle_Erth_rotation = -2 * np.pi * current_time / (24 * 3600)
+  angle_Erth_rotation = -2 * np.pi * current_time / (24 * 60 * 60)
   #print(angle_Erth_rotation)
 
   current_point = np.array(trajectory[i][:]).transpose()
@@ -177,12 +179,12 @@ for i in range(len(tspan)):
     
 total_energy = potential_enegry + kinetic_enegry
 
-#E.draw_me(ax)
-#E.draw_stratosphere(ax)
+E.draw_me(ax)
+E.draw_stratosphere(ax)
 
 S.draw_self_orbit(ax, trajectory_corrected, x)
 
-ax.scatter(0, 0, 0, marker='o', color='g')
+#ax.scatter(0, 0, 0, marker='o', color='g')
 
 ax.scatter(10 ** 7, 10 ** 7, 10 ** 7, marker='o', color='k', alpha=0)
 ax.scatter(-10 ** 7, 10 ** 7, 10 ** 7, marker='o', color='k', alpha=0)
