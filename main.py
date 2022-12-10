@@ -58,6 +58,9 @@ class Earth():
 
     # Plot the stratosphere
     ax.plot_wireframe(x_stratosphere, y_stratosphere, z_stratosphere, linewidth=1, alpha=0.3)
+  
+  def check_point_in_atmosphere(self, x, y, z):
+    return S.height <= 50000
 
   def return_data(self):
     return [G, M, E_radius, self.stratosphere_radius, self.Oz]
@@ -68,6 +71,7 @@ class Satellite():
     self.mass = 420000
     self.height = 437 * (10 ** 3)
     self.velocity = 7654
+    #self.velocity = 7654
     self.time = 90 * 60
 
   def draw_self_orbit(self, ax, trajectory_corrected):
@@ -75,7 +79,7 @@ class Satellite():
     Y = np.array([i[1] for i in trajectory_corrected])
     Z = np.array([i[2] for i in trajectory_corrected])
 
-    ax.plot(X, Y, Z, label='Satellite-orbit', color='r', linewidth=1.5)
+    ax.plot(X, Y, Z, label=str("The satellite is located in the Earth's atmosphere: "+str(E.check_point_in_atmosphere(x, y, z))), color='r', linewidth=1.5)
     ax.legend()
     
   
@@ -86,7 +90,7 @@ class Satellite():
 
 
 fig = plt.figure()
-ax = fig.add_subplot(projection='3d')
+ax = fig.add_subplot(2, 2, 1, projection='3d')
 
 #Satellite_orbit = 0
 
@@ -97,8 +101,17 @@ S = Satellite()
 #North = -43.07
 #East = -61.5
 
-North = float(input())
+#North = float(input())
+North = -42.52
 East_standart = 0
+
+#East = float(input())
+East = 0
+
+x, z = to_coord(E_radius + S.height, 0, East)
+x, y = to_coord(x, 0, North)
+
+ax.scatter(int(x), int(y), int(z), marker='o', color='k')
 
 x_st, z_st = to_coord(E_radius + S.height, 0, East_standart)
 x_st, y_st = to_coord(x_st, 0, North)
@@ -124,17 +137,12 @@ for i in range(len(tspan)):
 
   current_point = np.array(trajectory[i][:])
 
+  x_str = current_point
+
   kinetic_enegry[i] = 0.5 * S.mass * np.dot(velocity[i], velocity[0])
   potential_enegry[i] = -1 * G * M * S.mass / np.linalg.norm(current_point)
 
 total_energy = potential_enegry + kinetic_enegry
-
-East = float(input())
-
-x, z = to_coord(E_radius + S.height, 0, East)
-x, y = to_coord(x, 0, North)
-
-ax.scatter(int(x), int(y), int(z), marker='o', color='k')
 
 E.draw_me(ax)
 E.draw_stratosphere(ax)
@@ -148,5 +156,12 @@ ax.scatter(-10 ** 7, 10 ** 7, 10 ** 7, marker='o', color='k', alpha=0)
 ax.scatter(10 ** 7, -10 ** 7, 10 ** 7, marker='o', color='k', alpha=0)
 ax.scatter(-10 ** 7, -10 ** 7, 10 ** 7, marker='o', color='k', alpha=0)
 
+ax2 = fig.add_subplot(2, 2, 2)
+
+ax2.plot(tspan, kinetic_enegry, 'r', label="kinetic")
+ax2.plot(tspan, potential_enegry, 'b', label="potential")
+ax2.plot(tspan, total_energy, 'k', label="total")
+ax2.legend()
+ax2.set_title(['change in total energy: ', total_energy[-1] - total_energy[0]])
 
 plt.show()
