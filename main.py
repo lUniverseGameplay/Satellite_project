@@ -5,7 +5,6 @@ from mpl_toolkits import mplot3d
 from scipy.integrate import odeint
 import math
 
-
 def to_coord(c1, c2, rad):
     f_c1 = c1 * round(math.cos(math.radians(rad)), 5) - c2 * math.sin(math.radians(rad))
     f_c2 = c1 * math.sin(math.radians(rad)) + c2 * round(math.cos(math.radians(rad)), 5)
@@ -90,7 +89,8 @@ class Satellite():
 
 
 fig = plt.figure()
-ax = fig.add_subplot(2, 2, 1, projection='3d')
+ax = fig.add_subplot(1, 1, 1, projection='3d')
+#ax = fig.add_subplot(2, 2, 1, projection='3d')
 
 #Satellite_orbit = 0
 
@@ -103,20 +103,16 @@ S = Satellite()
 
 #North = float(input())
 North = -42.52
-East_standart = 0
 
 #East = float(input())
-East = 0
+East = -10
 
 x, z = to_coord(E_radius + S.height, 0, East)
 x, y = to_coord(x, 0, North)
 
 ax.scatter(int(x), int(y), int(z), marker='o', color='k')
 
-x_st, z_st = to_coord(E_radius + S.height, 0, East_standart)
-x_st, y_st = to_coord(x_st, 0, North)
-
-coordinats = [int(x_st), int(y_st), int(z_st)]
+coordinats = [int(x), int(y), int(z)]
 
 tspan = np.linspace(0, 3 * S.time, 10 ** 5)
 
@@ -129,15 +125,19 @@ xd = odeint(odefun, c_and_v, tspan)
 trajectory = [i[0:3] for i in xd]
 velocity = [i[3:6] for i in xd]
 
+trajectory_corrected = np.zeros(np.shape(trajectory))
+
 kinetic_enegry = np.zeros(np.shape(trajectory)[0])
 potential_enegry = np.zeros(np.shape(trajectory)[0])
 
 for i in range(len(tspan)):
   current_time = tspan[i]
 
+  angle_Erth_rotation = -2 * np.pi * current_time / (24 * 60 * 60)
+
   current_point = np.array(trajectory[i][:])
 
-  x_str = current_point
+  trajectory_corrected[i] = current_point
 
   kinetic_enegry[i] = 0.5 * S.mass * np.dot(velocity[i], velocity[0])
   potential_enegry[i] = -1 * G * M * S.mass / np.linalg.norm(current_point)
@@ -147,7 +147,7 @@ total_energy = potential_enegry + kinetic_enegry
 E.draw_me(ax)
 E.draw_stratosphere(ax)
 
-S.draw_self_orbit(ax, trajectory)
+S.draw_self_orbit(ax, trajectory_corrected)
 
 #ax.scatter(0, 0, 0, marker='o', color='g')
 
@@ -156,12 +156,12 @@ ax.scatter(-10 ** 7, 10 ** 7, 10 ** 7, marker='o', color='k', alpha=0)
 ax.scatter(10 ** 7, -10 ** 7, 10 ** 7, marker='o', color='k', alpha=0)
 ax.scatter(-10 ** 7, -10 ** 7, 10 ** 7, marker='o', color='k', alpha=0)
 
-ax2 = fig.add_subplot(2, 2, 2)
+#ax2 = fig.add_subplot(2, 2, 2)
 
-ax2.plot(tspan, kinetic_enegry, 'r', label="kinetic")
-ax2.plot(tspan, potential_enegry, 'b', label="potential")
-ax2.plot(tspan, total_energy, 'k', label="total")
-ax2.legend()
-ax2.set_title(['change in total energy: ', total_energy[-1] - total_energy[0]])
+#ax2.plot(tspan, kinetic_enegry, 'r', label="kinetic")
+#ax2.plot(tspan, potential_enegry, 'b', label="potential")
+#ax2.plot(tspan, total_energy, 'k', label="total")
+#ax2.legend()
+#ax2.set_title(['change in total energy: ', total_energy[-1] - total_energy[0]])
 
 plt.show()
