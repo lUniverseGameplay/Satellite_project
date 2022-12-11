@@ -5,6 +5,7 @@ from mpl_toolkits import mplot3d
 from scipy.integrate import odeint
 import math
 
+
 def to_coord(c1, c2, rad):
   f_c1 = c1 * round(math.cos(math.radians(rad)), 5) - c2 * math.sin(math.radians(rad))
   f_c2 = c1 * math.sin(math.radians(rad)) + c2 * round(math.cos(math.radians(rad)), 5)
@@ -36,7 +37,7 @@ class Earth():
   
   def draw_me(self, ax):
     # Open Image in PIL
-    bm = PIL.Image.open('data/earthicefreesm.jpg') 
+    bm = PIL.Image.open('data/earthicefreesm_true_size.jpg') 
     bm = np.array(bm.resize([d * 2 // 1 for d in bm.size]))/256
 
     # Create Earth with texture3
@@ -82,8 +83,8 @@ class Satellite():
     self.mass = 420000
     #self.height = 437 * (10 ** 2)
     self.height = 437 * (10 ** 3)
-    self.velocity2 = 10000
     self.velocity = 7654
+    self.velocity2 = self.velocity + 2346
     #self.velocity = 7654
     self.time = 90 * 60
     self.time2 = 90 * 60 * 3
@@ -125,39 +126,35 @@ ax.set_box_aspect(aspect=(1,1,1))
 E = Earth()
 S = Satellite()
 
-E.draw_me(ax)
-E.draw_stratosphere(ax)
-
 #ax.scatter(0, 0, 0, marker='o', color='g')
 
 #North = -43.07
 #East = -61.5
 
 #North = float(input()) % 360
-North = 0
+North = -42.52
 
-#East = float(input())
+#East = float(input()) % 90
 East = 50
-
-#if (math.fabs(North) // 45) % 2 == 0:
-#  ax.scatter(10 ** 7.5, 10 ** 7.5, 10 ** 7.5, marker='o', color='k', alpha=0)
-#  ax.scatter(-10 ** 7.5, 10 ** 7.5, 10 ** 7.5, marker='o', color='k', alpha=0)
-#  ax.scatter(10 ** 7.5, -10 ** 7.5, 10 ** 7.5, marker='o', color='k', alpha=0)
-#  ax.scatter(-10 ** 7.5, -10 ** 7.5, 10 ** 7.5, marker='o', color='k', alpha=0)
-#else:
-#  ax.scatter(10 ** 7, 10 ** 7, 10 ** 7, marker='o', color='k', alpha=0)
-#  ax.scatter(-10 ** 7, 10 ** 7, 10 ** 7, marker='o', color='k', alpha=0)
-#  ax.scatter(10 ** 7, -10 ** 7, 10 ** 7, marker='o', color='k', alpha=0)
-#  ax.scatter(-10 ** 7, -10 ** 7, 10 ** 7, marker='o', color='k', alpha=0)
 
 #ax.set_box_aspect((10 ** 7, 10 ** 7, 10 ** 7))
 
-x, z = to_coord(E_radius + S.height, 0, East)
-x, y = to_coord(x, 0, North)
+#x, z = to_coord(E_radius + S.height, 0, East)
+#x, y = to_coord(x, 0, North)
 
-ax.scatter(int(x), int(y), int(z), marker='o', color='k')
+East_standart = 0
 
-coordinats = [int(x), int(y), int(z)]
+#ax.set_box_aspect((10 ** 7, 10 ** 7, 10 ** 7))
+
+x_st, z_st = to_coord(E_radius + S.height, 0, East_standart)
+x_st, y_st = to_coord(x_st, 0, North)
+
+ax.scatter(int(x_st), int(y_st), int(z_st), marker='o', color='k')
+
+coordinats = [int(x_st), int(y_st), int(z_st)]
+
+E.draw_me(ax)
+E.draw_stratosphere(ax)
 
 for j in range(2):
   if j:
