@@ -6,21 +6,21 @@ from scipy.integrate import odeint
 import math
 
 def to_coord(c1, c2, rad):
-    f_c1 = c1 * round(math.cos(math.radians(rad)), 5) - c2 * math.sin(math.radians(rad))
-    f_c2 = c1 * math.sin(math.radians(rad)) + c2 * round(math.cos(math.radians(rad)), 5)
-    return [f_c1, f_c2]
+  f_c1 = c1 * round(math.cos(math.radians(rad)), 5) - c2 * math.sin(math.radians(rad))
+  f_c2 = c1 * math.sin(math.radians(rad)) + c2 * round(math.cos(math.radians(rad)), 5)
+  return [f_c1, f_c2]
 
 def odefun(lst: np.ndarray, t: float) -> np.ndarray:
-    r = np.array([-1 * lst[0], -1 * lst[1], -1 * lst[2]])
-    norm_r = np.linalg.norm(r) ** 3
-    ax = G * M * -1 * lst[0] / norm_r + S.mass * -1 * lst[0] / norm_r
-    ay = G * M * -1 * lst[1] / norm_r + S.mass * -1 * lst[1] / norm_r
-    az = G * M * -1 * lst[2] / norm_r + S.mass * -1 * lst[2] / norm_r
-    if E.check_point_in_atmosphere(math.fabs(ax), math.fabs(ay), math.fabs(az)):
-      S.in_e_stratosphere = True
-    if not E.check_point_out_orbit(math.fabs(ax), math.fabs(ay), math.fabs(az)):
-      S.in_e_orbit = False
-    return np.array([lst[3], lst[4], lst[5], ax, ay, az])
+  if E.check_point_in_atmosphere(math.fabs(lst[0]), math.fabs(lst[1]), math.fabs(lst[2])):
+    S.in_e_stratosphere = True
+  if not E.check_point_out_orbit(math.fabs(lst[0]), math.fabs(lst[1]), math.fabs(lst[2])):
+    S.in_e_orbit = False
+  r = np.array([-1 * lst[0], -1 * lst[1], -1 * lst[2]])
+  norm_r = np.linalg.norm(r) ** 3
+  ax = G * M * -1 * lst[0] / norm_r + S.mass * -1 * lst[0] / norm_r * (10 ** 6)
+  ay = G * M * -1 * lst[1] / norm_r + S.mass * -1 * lst[1] / norm_r * (10 ** 6)
+  az = G * M * -1 * lst[2] / norm_r + S.mass * -1 * lst[2] / norm_r * (10 ** 6)
+  return np.array([lst[3], lst[4], lst[5], ax, ay, az])
 
 
 class Earth():
@@ -80,9 +80,11 @@ class Earth():
 class Satellite():
   def __init__(self):
     self.mass = 420000
+    #self.height = 437 * (10 ** 2)
     self.height = 437 * (10 ** 3)
     self.velocity2 = 10000
     self.velocity = 7654
+    #self.velocity = 7654
     self.time = 90 * 60
     self.time2 = 90 * 60 * 3
 
@@ -102,6 +104,9 @@ class Satellite():
     #ax.plot(X, Y, Z, label=str("The satellite is located in the Earth's atmosphere: "+str(E.check_point_in_atmosphere(x, y, z))), color=self.color_orbit[ind], linewidth=1.5)
     ax.plot(X, Y, Z, label=label_name, color=self.color_orbit[ind], linewidth=1.5)
     ax.legend()
+    ax.set_xlabel('X [m]')
+    ax.set_ylabel('Y [m]')
+    ax.set_zlabel('Z [m]')
     
   
   def return_data(self):
@@ -110,8 +115,9 @@ class Satellite():
 
 
 
-fig = plt.figure()
+fig = plt.figure(figsize=plt.figaspect(0.5)*1.5)
 ax = fig.add_subplot(2, 2, 1, projection='3d')
+ax.set_box_aspect(aspect=(1,1,1))
 #ax = fig.add_subplot(2, 2, 1, projection='3d')
 
 #Satellite_orbit = 0
@@ -128,21 +134,23 @@ E.draw_stratosphere(ax)
 #East = -61.5
 
 #North = float(input()) % 360
-North = -42.57
+North = 0
 
 #East = float(input())
-East = 0
+East = 50
 
-if (math.fabs(North) // 45) % 2 == 0:
-  ax.scatter(10 ** 7.5, 10 ** 7.5, 10 ** 7.5, marker='o', color='k', alpha=0)
-  ax.scatter(-10 ** 7.5, 10 ** 7.5, 10 ** 7.5, marker='o', color='k', alpha=0)
-  ax.scatter(10 ** 7.5, -10 ** 7.5, 10 ** 7.5, marker='o', color='k', alpha=0)
-  ax.scatter(-10 ** 7.5, -10 ** 7.5, 10 ** 7.5, marker='o', color='k', alpha=0)
-else:
-  ax.scatter(10 ** 7, 10 ** 7, 10 ** 7, marker='o', color='k', alpha=0)
-  ax.scatter(+10 ** 7, 10 ** 7, 10 ** 7, marker='o', color='k', alpha=0)
-  ax.scatter(10 ** 7, +10 ** 7, 10 ** 7, marker='o', color='k', alpha=0)
-  ax.scatter(+10 ** 7, +10 ** 7, 10 ** 7, marker='o', color='k', alpha=0)
+#if (math.fabs(North) // 45) % 2 == 0:
+#  ax.scatter(10 ** 7.5, 10 ** 7.5, 10 ** 7.5, marker='o', color='k', alpha=0)
+#  ax.scatter(-10 ** 7.5, 10 ** 7.5, 10 ** 7.5, marker='o', color='k', alpha=0)
+#  ax.scatter(10 ** 7.5, -10 ** 7.5, 10 ** 7.5, marker='o', color='k', alpha=0)
+#  ax.scatter(-10 ** 7.5, -10 ** 7.5, 10 ** 7.5, marker='o', color='k', alpha=0)
+#else:
+#  ax.scatter(10 ** 7, 10 ** 7, 10 ** 7, marker='o', color='k', alpha=0)
+#  ax.scatter(-10 ** 7, 10 ** 7, 10 ** 7, marker='o', color='k', alpha=0)
+#  ax.scatter(10 ** 7, -10 ** 7, 10 ** 7, marker='o', color='k', alpha=0)
+#  ax.scatter(-10 ** 7, -10 ** 7, 10 ** 7, marker='o', color='k', alpha=0)
+
+#ax.set_box_aspect((10 ** 7, 10 ** 7, 10 ** 7))
 
 x, z = to_coord(E_radius + S.height, 0, East)
 x, y = to_coord(x, 0, North)
@@ -175,11 +183,11 @@ for j in range(2):
   #for i in range(1):
     current_time = tspan[i]
 
-    current_point = np.array(trajectory[i][:])
+    current_point = np.array(trajectory[i][:]).transpose()
 
     trajectory_corrected[i] = current_point
 
-    kinetic_enegry[i] = 0.5 * S.mass * np.dot(velocity[i], velocity[0])
+    kinetic_enegry[i] = 0.5 * S.mass * np.dot(velocity[i][:], velocity[i][:])
     #potential_enegry[i] = -1 * G * M * S.mass / np.linalg.norm(current_point)
     potential_enegry[i] = -1 * G * M * S.mass / np.linalg.norm(current_point)
 
