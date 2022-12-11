@@ -69,16 +69,19 @@ class Satellite():
   def __init__(self):
     self.mass = 420000
     self.height = 437 * (10 ** 3)
+    self.velocity2 = 10000
     self.velocity = 7654
-    #self.velocity = 7654
     self.time = 90 * 60
+    self.time2 = 90 * 60 * 3
 
-  def draw_self_orbit(self, ax, trajectory_corrected):
+    self.color_orbit = ['r', 'g']
+
+  def draw_self_orbit(self, ax, trajectory_corrected, ind):
     X = np.array([i[0] for i in trajectory_corrected])
     Y = np.array([i[1] for i in trajectory_corrected])
     Z = np.array([i[2] for i in trajectory_corrected])
 
-    ax.plot(X, Y, Z, label=str("The satellite is located in the Earth's atmosphere: "+str(E.check_point_in_atmosphere(x, y, z))), color='r', linewidth=1.5)
+    ax.plot(X, Y, Z, label=str("The satellite is located in the Earth's atmosphere: "+str(E.check_point_in_atmosphere(x, y, z))), color=self.color_orbit[ind], linewidth=1.5)
     ax.legend()
     
   
@@ -89,13 +92,23 @@ class Satellite():
 
 
 fig = plt.figure()
-ax = fig.add_subplot(1, 1, 1, projection='3d')
+ax = fig.add_subplot(2, 2, 1, projection='3d')
 #ax = fig.add_subplot(2, 2, 1, projection='3d')
 
 #Satellite_orbit = 0
 
 E = Earth()
 S = Satellite()
+
+E.draw_me(ax)
+E.draw_stratosphere(ax)
+
+#ax.scatter(0, 0, 0, marker='o', color='g')
+
+ax.scatter(10 ** 7, 10 ** 7, 10 ** 7, marker='o', color='k', alpha=0)
+ax.scatter(-10 ** 7, 10 ** 7, 10 ** 7, marker='o', color='k', alpha=0)
+ax.scatter(10 ** 7, -10 ** 7, 10 ** 7, marker='o', color='k', alpha=0)
+ax.scatter(-10 ** 7, -10 ** 7, 10 ** 7, marker='o', color='k', alpha=0)
 
 
 #North = -43.07
@@ -105,7 +118,7 @@ S = Satellite()
 North = -42.52
 
 #East = float(input())
-East = -10
+East = 0
 
 x, z = to_coord(E_radius + S.height, 0, East)
 x, y = to_coord(x, 0, North)
@@ -114,54 +127,48 @@ ax.scatter(int(x), int(y), int(z), marker='o', color='k')
 
 coordinats = [int(x), int(y), int(z)]
 
-tspan = np.linspace(0, 3 * S.time, 10 ** 5)
+for j in range(2):
+  if j:
+    tspan = np.linspace(0, 3 * S.time2, 10 ** 5)
+    vel_list = [0, 0, S.velocity2]
+  else:
+    tspan = np.linspace(0, 3 * S.time, 10 ** 5)
+    vel_list = [0, 0, S.velocity]
 
-vel_list = [0, 0, S.velocity]
+  c_and_v = np.array(coordinats + vel_list)
 
-c_and_v = np.array(coordinats + vel_list)
+  xd = odeint(odefun, c_and_v, tspan)
 
-xd = odeint(odefun, c_and_v, tspan)
+  trajectory = [i[0:3] for i in xd]
+  velocity = [i[3:6] for i in xd]
 
-trajectory = [i[0:3] for i in xd]
-velocity = [i[3:6] for i in xd]
+  trajectory_corrected = np.zeros(np.shape(trajectory))
 
-trajectory_corrected = np.zeros(np.shape(trajectory))
+  kinetic_enegry = np.zeros(np.shape(trajectory)[0])
+  potential_enegry = np.zeros(np.shape(trajectory)[0])
 
-kinetic_enegry = np.zeros(np.shape(trajectory)[0])
-potential_enegry = np.zeros(np.shape(trajectory)[0])
+  for i in range(len(tspan)):
+  #for i in range(1):
+    current_time = tspan[i]
 
-for i in range(len(tspan)):
-  current_time = tspan[i]
+    current_point = np.array(trajectory[i][:])
 
-  angle_Erth_rotation = -2 * np.pi * current_time / (24 * 60 * 60)
+    trajectory_corrected[i] = current_point
 
-  current_point = np.array(trajectory[i][:])
+    kinetic_enegry[i] = 0.5 * S.mass * np.dot(velocity[i], velocity[0])
+    #potential_enegry[i] = -1 * G * M * S.mass / np.linalg.norm(current_point)
+    potential_enegry[i] = -1 * G * M * S.mass / np.linalg.norm(current_point)
 
-  trajectory_corrected[i] = current_point
+  total_energy = potential_enegry + kinetic_enegry
 
-  kinetic_enegry[i] = 0.5 * S.mass * np.dot(velocity[i], velocity[0])
-  potential_enegry[i] = -1 * G * M * S.mass / np.linalg.norm(current_point)
+  S.draw_self_orbit(ax, trajectory_corrected, j)
 
-total_energy = potential_enegry + kinetic_enegry
+  ax2 = fig.add_subplot(2, 2, 2 + j)
 
-E.draw_me(ax)
-E.draw_stratosphere(ax)
-
-S.draw_self_orbit(ax, trajectory_corrected)
-
-#ax.scatter(0, 0, 0, marker='o', color='g')
-
-ax.scatter(10 ** 7, 10 ** 7, 10 ** 7, marker='o', color='k', alpha=0)
-ax.scatter(-10 ** 7, 10 ** 7, 10 ** 7, marker='o', color='k', alpha=0)
-ax.scatter(10 ** 7, -10 ** 7, 10 ** 7, marker='o', color='k', alpha=0)
-ax.scatter(-10 ** 7, -10 ** 7, 10 ** 7, marker='o', color='k', alpha=0)
-
-#ax2 = fig.add_subplot(2, 2, 2)
-
-#ax2.plot(tspan, kinetic_enegry, 'r', label="kinetic")
-#ax2.plot(tspan, potential_enegry, 'b', label="potential")
-#ax2.plot(tspan, total_energy, 'k', label="total")
-#ax2.legend()
-#ax2.set_title(['change in total energy: ', total_energy[-1] - total_energy[0]])
+  ax2.plot(tspan, kinetic_enegry, 'r', label="kinetic")
+  ax2.plot(tspan, potential_enegry, 'b', label="potential")
+  ax2.plot(tspan, total_energy, 'k', label="total")
+  ax2.legend()
+  ax2.set_title(['change in total energy: ' + S.color_orbit[j] + ' orbit', total_energy[-1] - total_energy[0]])
 
 plt.show()
