@@ -16,6 +16,10 @@ def odefun(lst: np.ndarray, t: float) -> np.ndarray:
     ax = G * M * -1 * lst[0] / norm_r + S.mass * -1 * lst[0] / norm_r
     ay = G * M * -1 * lst[1] / norm_r + S.mass * -1 * lst[1] / norm_r
     az = G * M * -1 * lst[2] / norm_r + S.mass * -1 * lst[2] / norm_r
+    if E.check_point_in_atmosphere(math.fabs(ax), math.fabs(ay), math.fabs(az)):
+      S.in_e_stratosphere = True
+    if not E.check_point_out_orbit(math.fabs(ax), math.fabs(ay), math.fabs(az)):
+      S.in_e_orbit = False
     return np.array([lst[3], lst[4], lst[5], ax, ay, az])
 
 
@@ -26,7 +30,9 @@ class Earth():
     M = 5.972 * (10 ** 24)
     E_radius = 6371000
 
-    self.stratosphere_radius = E_radius + 50000
+    self.stratosphere_high = 50000
+    self.orbit_min = 160000
+    self.orbit_max = 2 * 10 ** 6
   
   def draw_me(self, ax):
     # Open Image in PIL
@@ -51,18 +57,24 @@ class Earth():
     u_stratosphere = np.linspace(0, 2 * np.pi, 100)
     v_stratosphere = np.linspace(0, np.pi, 100)
 
-    x_stratosphere = self.stratosphere_radius * np.outer(np.cos(u_stratosphere), np.sin(v_stratosphere))
-    y_stratosphere = self.stratosphere_radius * np.outer(np.sin(u_stratosphere), np.sin(v_stratosphere))
-    z_stratosphere = self.stratosphere_radius * np.outer(np.ones(np.size(u_stratosphere)), np.cos(v_stratosphere))
+    x_stratosphere = (self.stratosphere_high + E_radius) * np.outer(np.cos(u_stratosphere), np.sin(v_stratosphere))
+    y_stratosphere = (self.stratosphere_high + E_radius) * np.outer(np.sin(u_stratosphere), np.sin(v_stratosphere))
+    z_stratosphere = (self.stratosphere_high + E_radius) * np.outer(np.ones(np.size(u_stratosphere)), np.cos(v_stratosphere))
 
     # Plot the stratosphere
     ax.plot_wireframe(x_stratosphere, y_stratosphere, z_stratosphere, linewidth=1, alpha=0.3)
   
   def check_point_in_atmosphere(self, x, y, z):
-    return S.height <= 50000
+    return (x <= (self.stratosphere_high + E_radius) and y <= (self.stratosphere_high + E_radius) and z <= (self.stratosphere_high + E_radius))
+
+  def check_point_out_orbit(self, x, y, z):
+    f1 = (x >= (self.orbit_min + E_radius) and x <= (self.orbit_max + E_radius))
+    f2 = (y >= (self.orbit_min + E_radius) and y <= (self.orbit_max + E_radius))
+    f3 = (z >= (self.orbit_min + E_radius) and z <= (self.orbit_max + E_radius))
+    return f1 and f2 and f3
 
   def return_data(self):
-    return [G, M, E_radius, self.stratosphere_radius, self.Oz]
+    return [G, M, E_radius, self.stratosphere_high, self.Oz]
 
 
 class Satellite():
@@ -76,12 +88,19 @@ class Satellite():
 
     self.color_orbit = ['r', 'g']
 
+    self.in_e_orbit = True
+    self.in_e_stratosphere = False
+
   def draw_self_orbit(self, ax, trajectory_corrected, ind):
     X = np.array([i[0] for i in trajectory_corrected])
     Y = np.array([i[1] for i in trajectory_corrected])
     Z = np.array([i[2] for i in trajectory_corrected])
 
-    ax.plot(X, Y, Z, label=str("The satellite is located in the Earth's atmosphere: "+str(E.check_point_in_atmosphere(x, y, z))), color=self.color_orbit[ind], linewidth=1.5)
+    label_name = "The satellite is located in the Earth's atmosphere: " + str(self.in_e_stratosphere) + '\n'
+    label_name += "The satellite is located in the Earth's orbit: " + str(self.in_e_orbit)
+
+    #ax.plot(X, Y, Z, label=str("The satellite is located in the Earth's atmosphere: "+str(E.check_point_in_atmosphere(x, y, z))), color=self.color_orbit[ind], linewidth=1.5)
+    ax.plot(X, Y, Z, label=label_name, color=self.color_orbit[ind], linewidth=1.5)
     ax.legend()
     
   
@@ -105,20 +124,25 @@ E.draw_stratosphere(ax)
 
 #ax.scatter(0, 0, 0, marker='o', color='g')
 
-ax.scatter(10 ** 7, 10 ** 7, 10 ** 7, marker='o', color='k', alpha=0)
-ax.scatter(-10 ** 7, 10 ** 7, 10 ** 7, marker='o', color='k', alpha=0)
-ax.scatter(10 ** 7, -10 ** 7, 10 ** 7, marker='o', color='k', alpha=0)
-ax.scatter(-10 ** 7, -10 ** 7, 10 ** 7, marker='o', color='k', alpha=0)
-
-
 #North = -43.07
 #East = -61.5
 
-#North = float(input())
-North = -42.52
+#North = float(input()) % 360
+North = -42.57
 
 #East = float(input())
 East = 0
+
+if (math.fabs(North) // 45) % 2 == 0:
+  ax.scatter(10 ** 7.5, 10 ** 7.5, 10 ** 7.5, marker='o', color='k', alpha=0)
+  ax.scatter(-10 ** 7.5, 10 ** 7.5, 10 ** 7.5, marker='o', color='k', alpha=0)
+  ax.scatter(10 ** 7.5, -10 ** 7.5, 10 ** 7.5, marker='o', color='k', alpha=0)
+  ax.scatter(-10 ** 7.5, -10 ** 7.5, 10 ** 7.5, marker='o', color='k', alpha=0)
+else:
+  ax.scatter(10 ** 7, 10 ** 7, 10 ** 7, marker='o', color='k', alpha=0)
+  ax.scatter(+10 ** 7, 10 ** 7, 10 ** 7, marker='o', color='k', alpha=0)
+  ax.scatter(10 ** 7, +10 ** 7, 10 ** 7, marker='o', color='k', alpha=0)
+  ax.scatter(+10 ** 7, +10 ** 7, 10 ** 7, marker='o', color='k', alpha=0)
 
 x, z = to_coord(E_radius + S.height, 0, East)
 x, y = to_coord(x, 0, North)
