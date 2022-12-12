@@ -12,15 +12,11 @@ def to_coord(c1, c2, rad):
   return [f_c1, f_c2]
 
 def odefun(lst: np.ndarray, t: float) -> np.ndarray:
-  if E.check_point_in_atmosphere(math.fabs(lst[0]), math.fabs(lst[1]), math.fabs(lst[2])):
-    S.in_e_stratosphere = True
-  if not E.check_point_out_orbit(math.fabs(lst[0]), math.fabs(lst[1]), math.fabs(lst[2])):
-    S.in_e_orbit = False
-  r = np.array([-1 * lst[0], -1 * lst[1], -1 * lst[2]])
+  r = np.array([-1 * lst[0], -1 * lst[1], 1 * lst[2]])
   norm_r = np.linalg.norm(r) ** 3
-  ax = G * M * -1 * lst[0] / norm_r + S.mass * -1 * lst[0] / norm_r * (10 ** 6)
-  ay = G * M * -1 * lst[1] / norm_r + S.mass * -1 * lst[1] / norm_r * (10 ** 6)
-  az = G * M * -1 * lst[2] / norm_r + S.mass * -1 * lst[2] / norm_r * (10 ** 6)
+  ax = G * (M * -1 * lst[0] / norm_r + S.mass * -1 * lst[0] / norm_r)
+  ay = G * (M * -1 * lst[1] / norm_r + S.mass * -1 * lst[1] / norm_r)
+  az = G * (M * -1 * lst[2] / norm_r + S.mass * 1 * lst[2] / norm_r)
   return np.array([lst[3], lst[4], lst[5], ax, ay, az])
 
 
@@ -66,13 +62,22 @@ class Earth():
     ax.plot_wireframe(x_stratosphere, y_stratosphere, z_stratosphere, linewidth=1, alpha=0.3)
   
   def check_point_in_atmosphere(self, x, y, z):
-    return (x <= (self.stratosphere_high + E_radius) and y <= (self.stratosphere_high + E_radius) and z <= (self.stratosphere_high + E_radius))
+    f1 = (x ** 2 + y ** 2 + 10 ** 9) <= (self.stratosphere_high + E_radius) ** 2 # погрешность
+    f2 = (x ** 2 + z ** 2 + 10 ** 9) <= (self.stratosphere_high + E_radius) ** 2 # погрешность
+    f3 = (y ** 2 + z ** 2 + 10 ** 9) <= (self.stratosphere_high + E_radius) ** 2 # погрешность
+    return  f1 and f2 and f3
+  
+  def check_point_in_Earth(self, x, y, z):
+    f1 = (x ** 2 + y ** 2) <= (E_radius) ** 2
+    f2 = (x ** 2 + z ** 2) <= (E_radius) ** 2
+    f3 = (y ** 2 + z ** 2) <= (E_radius) ** 2
+    return  f1 and f2 and f3
 
   def check_point_out_orbit(self, x, y, z):
     f1 = (x >= (self.orbit_min + E_radius) and x <= (self.orbit_max + E_radius))
     f2 = (y >= (self.orbit_min + E_radius) and y <= (self.orbit_max + E_radius))
     f3 = (z >= (self.orbit_min + E_radius) and z <= (self.orbit_max + E_radius))
-    return f1 and f2 and f3
+    return f1 or f2 or f3
 
   def return_data(self):
     return [G, M, E_radius, self.stratosphere_high, self.Oz]
@@ -85,6 +90,7 @@ class Satellite():
     self.height = 437 * (10 ** 3)
     self.velocity = 7654
     self.velocity2 = self.velocity + 2346
+    #self.velocity2 = self.velocity + 2346
     #self.velocity = 7654
     self.time = 90 * 60
     self.time2 = 90 * 60 * 3
@@ -93,6 +99,7 @@ class Satellite():
 
     self.in_e_orbit = True
     self.in_e_stratosphere = False
+    self.in_Earth = False
 
   def draw_self_orbit(self, ax, trajectory_corrected, ind):
     X = np.array([i[0] for i in trajectory_corrected])
@@ -100,7 +107,8 @@ class Satellite():
     Z = np.array([i[2] for i in trajectory_corrected])
 
     label_name = "The satellite is located in the Earth's atmosphere: " + str(self.in_e_stratosphere) + '\n'
-    label_name += "The satellite is located in the Earth's orbit: " + str(self.in_e_orbit)
+    label_name += "The satellite is located in the Earth's orbit: " + str(self.in_e_orbit) + '\n'
+    label_name += "The satellite has fallen: " + str(self.in_Earth)
 
     #ax.plot(X, Y, Z, label=str("The satellite is located in the Earth's atmosphere: "+str(E.check_point_in_atmosphere(x, y, z))), color=self.color_orbit[ind], linewidth=1.5)
     ax.plot(X, Y, Z, label=label_name, color=self.color_orbit[ind], linewidth=1.5)
@@ -117,8 +125,8 @@ class Satellite():
 
 
 fig = plt.figure(figsize=plt.figaspect(0.5)*1.5)
-ax = fig.add_subplot(2, 2, 1, projection='3d')
-ax.set_box_aspect(aspect=(1,1,1))
+ax = fig.add_subplot(1, 1, 1, projection='3d')
+#ax.set_box_aspect(aspect=(1,1,1))
 #ax = fig.add_subplot(2, 2, 1, projection='3d')
 
 #Satellite_orbit = 0
@@ -132,10 +140,10 @@ S = Satellite()
 #East = -61.5
 
 #North = float(input()) % 360
-North = -42.52
+North = -42.07
 
 #East = float(input()) % 90
-East = 50
+East = 0
 
 #ax.set_box_aspect((10 ** 7, 10 ** 7, 10 ** 7))
 
@@ -146,7 +154,7 @@ East_standart = 0
 
 #ax.set_box_aspect((10 ** 7, 10 ** 7, 10 ** 7))
 
-x_st, z_st = to_coord(E_radius + S.height, 0, East_standart)
+x_st, z_st = to_coord(E_radius + S.height, 0, East)
 x_st, y_st = to_coord(x_st, 0, North)
 
 ax.scatter(int(x_st), int(y_st), int(z_st), marker='o', color='k')
@@ -183,6 +191,17 @@ for j in range(2):
     current_point = np.array(trajectory[i][:]).transpose()
 
     trajectory_corrected[i] = current_point
+    if not S.in_e_stratosphere:
+      if E.check_point_in_atmosphere(math.fabs(current_point[0]), math.fabs(current_point[1]), math.fabs(current_point[2])):
+        print(i, current_point, E.stratosphere_high + E_radius)
+        print(current_point[0] ** 2 + current_point[1] ** 2, (E.stratosphere_high + E_radius) ** 2)
+        S.in_e_stratosphere = True
+    if not S.in_Earth:
+      if E.check_point_in_Earth(math.fabs(current_point[0]), math.fabs(current_point[1]), math.fabs(current_point[2])):
+        S.in_Earth = True
+    if S.in_e_orbit:
+      if not E.check_point_out_orbit(math.fabs(current_point[0]), math.fabs(current_point[1]), math.fabs(current_point[2])):
+        S.in_e_orbit = False
 
     kinetic_enegry[i] = 0.5 * S.mass * np.dot(velocity[i][:], velocity[i][:])
     #potential_enegry[i] = -1 * G * M * S.mass / np.linalg.norm(current_point)
@@ -192,12 +211,13 @@ for j in range(2):
 
   S.draw_self_orbit(ax, trajectory_corrected, j)
 
-  ax2 = fig.add_subplot(2, 2, 2 + j)
+  #ax2 = fig.add_subplot(2, 2, 2 + j)
 
-  ax2.plot(tspan, kinetic_enegry, 'r', label="kinetic")
-  ax2.plot(tspan, potential_enegry, 'b', label="potential")
-  ax2.plot(tspan, total_energy, 'k', label="total")
-  ax2.legend()
-  ax2.set_title(['change in total energy: ' + S.color_orbit[j] + ' orbit', total_energy[-1] - total_energy[0]])
+  #ax2.plot(tspan, kinetic_enegry, 'r', label="kinetic")
+  #ax2.plot(tspan, potential_enegry, 'b', label="potential")
+  #ax2.plot(tspan, total_energy, 'k', label="total")
+  #ax2.legend()
+  #ax2.set_title(['change in total energy: ' + S.color_orbit[j] + ' orbit', total_energy[-1] - total_energy[0]])
 
+ax.axis('scaled')
 plt.show()
