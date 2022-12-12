@@ -62,22 +62,22 @@ class Earth():
     ax.plot_wireframe(x_stratosphere, y_stratosphere, z_stratosphere, linewidth=1, alpha=0.3)
   
   def check_point_in_atmosphere(self, x, y, z):
-    f1 = (x ** 2 + y ** 2 + 10 ** 9) <= (self.stratosphere_high + E_radius) ** 2 # погрешность
-    f2 = (x ** 2 + z ** 2 + 10 ** 9) <= (self.stratosphere_high + E_radius) ** 2 # погрешность
-    f3 = (y ** 2 + z ** 2 + 10 ** 9) <= (self.stratosphere_high + E_radius) ** 2 # погрешность
+    f1 = (x ** 2 + y ** 2 + 10 ** 13) <= (self.stratosphere_high + E_radius) ** 2 # погрешность
+    f2 = (x ** 2 + z ** 2 + 10 ** 13) <= (self.stratosphere_high + E_radius) ** 2 # погрешность
+    f3 = (y ** 2 + z ** 2 + 10 ** 13) <= (self.stratosphere_high + E_radius) ** 2 # погрешность
     return  f1 and f2 and f3
   
   def check_point_in_Earth(self, x, y, z):
-    f1 = (x ** 2 + y ** 2) <= (E_radius) ** 2
-    f2 = (x ** 2 + z ** 2) <= (E_radius) ** 2
-    f3 = (y ** 2 + z ** 2) <= (E_radius) ** 2
+    f1 = (x ** 2 + y ** 2 + 10 ** 13) <= (E_radius) ** 2 # погрешность
+    f2 = (x ** 2 + z ** 2 + 10 ** 13) <= (E_radius) ** 2 # погрешность
+    f3 = (y ** 2 + z ** 2 + 10 ** 13) <= (E_radius) ** 2 # погрешность
     return  f1 and f2 and f3
 
   def check_point_out_orbit(self, x, y, z):
-    f1 = (x >= (self.orbit_min + E_radius) and x <= (self.orbit_max + E_radius))
-    f2 = (y >= (self.orbit_min + E_radius) and y <= (self.orbit_max + E_radius))
-    f3 = (z >= (self.orbit_min + E_radius) and z <= (self.orbit_max + E_radius))
-    return f1 or f2 or f3
+    f1 = (x ** 2 + y ** 2 + 10 ** 13) >= ((self.orbit_min + E_radius) ** 2) and (x ** 2 + y ** 2 + 10 ** 13) <= ((self.orbit_max + E_radius) ** 2) # погрешность
+    f2 = (x ** 2 + z ** 2 + 10 ** 13) >= ((self.orbit_min + E_radius) ** 2) and (x ** 2 + z ** 2 + 10 ** 13) <= ((self.orbit_max + E_radius) ** 2) # погрешность
+    f3 = (y ** 2 + z ** 2 + 10 ** 13) >= ((self.orbit_min + E_radius) ** 2) and (y ** 2 + z ** 2 + 10 ** 13) <= ((self.orbit_max + E_radius) ** 2) # погрешность
+    return  f1 and f2 and f3
 
   def return_data(self):
     return [G, M, E_radius, self.stratosphere_high, self.Oz]
@@ -97,7 +97,7 @@ class Satellite():
 
     self.color_orbit = ['r', 'g']
 
-    self.in_e_orbit = True
+    self.in_e_orbit = False
     self.in_e_stratosphere = False
     self.in_Earth = False
 
@@ -193,15 +193,15 @@ for j in range(2):
     trajectory_corrected[i] = current_point
     if not S.in_e_stratosphere:
       if E.check_point_in_atmosphere(math.fabs(current_point[0]), math.fabs(current_point[1]), math.fabs(current_point[2])):
-        print(i, current_point, E.stratosphere_high + E_radius)
-        print(current_point[0] ** 2 + current_point[1] ** 2, (E.stratosphere_high + E_radius) ** 2)
         S.in_e_stratosphere = True
     if not S.in_Earth:
       if E.check_point_in_Earth(math.fabs(current_point[0]), math.fabs(current_point[1]), math.fabs(current_point[2])):
         S.in_Earth = True
-    if S.in_e_orbit:
-      if not E.check_point_out_orbit(math.fabs(current_point[0]), math.fabs(current_point[1]), math.fabs(current_point[2])):
-        S.in_e_orbit = False
+    if not S.in_e_orbit:
+      if E.check_point_out_orbit(math.fabs(current_point[0]), math.fabs(current_point[1]), math.fabs(current_point[2])):
+        print(i, current_point, E_radius)
+        print(current_point[0] ** 2 + current_point[1] ** 2, (E_radius + E.orbit_min) ** 2, (E_radius + E.orbit_max) ** 2)
+        S.in_e_orbit = True
 
     kinetic_enegry[i] = 0.5 * S.mass * np.dot(velocity[i][:], velocity[i][:])
     #potential_enegry[i] = -1 * G * M * S.mass / np.linalg.norm(current_point)
