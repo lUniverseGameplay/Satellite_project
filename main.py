@@ -7,8 +7,8 @@ import math
 
 
 def to_coord(c1, c2, rad):
-  f_c1 = c1 * round(math.cos(math.radians(rad)), 5) - c2 * math.sin(math.radians(rad))
-  f_c2 = c1 * math.sin(math.radians(rad)) + c2 * round(math.cos(math.radians(rad)), 5)
+  f_c1 = c1 * round(math.cos(math.radians(rad)), 4) - c2 * math.sin(math.radians(rad))
+  f_c2 = c1 * math.sin(math.radians(rad)) + c2 * round(math.cos(math.radians(rad)), 4)
   return [f_c1, f_c2]
 
 def odefun(lst: np.ndarray, t: float) -> np.ndarray:
@@ -31,7 +31,7 @@ class Earth():
     self.orbit_min = 160000
     self.orbit_max = 2 * 10 ** 6
   
-  def draw_me(self, ax):
+  def draw_me(self, ax, East):
     # Open Image in PIL
     bm = PIL.Image.open('data/earthicefreesm_true_size.jpg') 
     bm = np.array(bm.resize([d * 2 // 1 for d in bm.size]))/256
@@ -43,6 +43,11 @@ class Earth():
     x = E_radius * np.outer(np.cos(lons), np.cos(lats)).T
     y = E_radius * np.outer(np.sin(lons), np.cos(lats)).T
     z = E_radius * np.outer(np.ones(np.size(lons)), np.sin(lats)).T
+
+    a = np.pi / (180 / -East)
+    t = np.transpose(np.array([x,y,z]), (1,2,0))
+    m = [[np.cos(a), 0, np.sin(a)],[0,1,0],[-np.sin(a), 0, np.cos(a)]]
+    x,y,z = np.transpose(t @ m, (2,0,1))
 
     # Plot the Earth
     ax.plot_surface(x, y, z, rstride=4, cstride=4, alpha=0.4, facecolors=bm)
@@ -77,7 +82,7 @@ class Earth():
     f1 = (x ** 2 + y ** 2 + 10 ** 13) >= ((self.orbit_min + E_radius) ** 2) and (x ** 2 + y ** 2 + 10 ** 13) <= ((self.orbit_max + E_radius) ** 2) # погрешность
     f2 = (x ** 2 + z ** 2 + 10 ** 13) >= ((self.orbit_min + E_radius) ** 2) and (x ** 2 + z ** 2 + 10 ** 13) <= ((self.orbit_max + E_radius) ** 2) # погрешность
     f3 = (y ** 2 + z ** 2 + 10 ** 13) >= ((self.orbit_min + E_radius) ** 2) and (y ** 2 + z ** 2 + 10 ** 13) <= ((self.orbit_max + E_radius) ** 2) # погрешность
-    return  f1 and f2 and f3
+    return  f1 or f2 or f3
 
   def return_data(self):
     return [G, M, E_radius, self.stratosphere_high, self.Oz]
@@ -143,7 +148,7 @@ S = Satellite()
 North = -42.07
 
 #East = float(input()) % 90
-East = 0
+East = 50
 
 #ax.set_box_aspect((10 ** 7, 10 ** 7, 10 ** 7))
 
@@ -154,15 +159,17 @@ East_standart = 0
 
 #ax.set_box_aspect((10 ** 7, 10 ** 7, 10 ** 7))
 
-x_st, z_st = to_coord(E_radius + S.height, 0, East)
+x_st, z_st = to_coord(E_radius + S.height, 0, East_standart)
 x_st, y_st = to_coord(x_st, 0, North)
 
 ax.scatter(int(x_st), int(y_st), int(z_st), marker='o', color='k')
 
-coordinats = [int(x_st), int(y_st), int(z_st)]
+#coordinats = [int(x_st), int(y_st), int(z_st)]
 
-E.draw_me(ax)
+E.draw_me(ax, East)
 E.draw_stratosphere(ax)
+  
+coordinats = [int(x_st), int(y_st), int(z_st)]
 
 for j in range(2):
   if j:
@@ -199,8 +206,8 @@ for j in range(2):
         S.in_Earth = True
     if not S.in_e_orbit:
       if E.check_point_out_orbit(math.fabs(current_point[0]), math.fabs(current_point[1]), math.fabs(current_point[2])):
-        print(i, current_point, E_radius)
-        print(current_point[0] ** 2 + current_point[1] ** 2, (E_radius + E.orbit_min) ** 2, (E_radius + E.orbit_max) ** 2)
+        #print(i, current_point, E_radius)
+        #print(current_point[0] ** 2 + current_point[1] ** 2, (E_radius + E.orbit_min) ** 2, (E_radius + E.orbit_max) ** 2)
         S.in_e_orbit = True
 
     kinetic_enegry[i] = 0.5 * S.mass * np.dot(velocity[i][:], velocity[i][:])
