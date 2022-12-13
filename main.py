@@ -7,8 +7,8 @@ import math
 
 
 def to_coord(c1, c2, rad):
-  f_c1 = c1 * round(math.cos(math.radians(rad)), 4) - c2 * math.sin(math.radians(rad))
-  f_c2 = c1 * math.sin(math.radians(rad)) + c2 * round(math.cos(math.radians(rad)), 4)
+  f_c1 = c1 * math.cos(math.radians(rad)) - c2 * math.sin(math.radians(rad))
+  f_c2 = c1 * math.sin(math.radians(rad)) + c2 * math.cos(math.radians(rad))
   return [f_c1, f_c2]
 
 def odefun(lst: np.ndarray, t: float) -> np.ndarray:
@@ -49,9 +49,7 @@ class Earth():
     m = [[np.cos(a), 0, np.sin(a)],[0,1,0],[-np.sin(a), 0, np.cos(a)]]
     x,y,z = np.transpose(t @ m, (2,0,1))
 
-    # Plot the Earth
     ax.plot_surface(x, y, z, rstride=4, cstride=4, alpha=0.4, facecolors=bm)
-    #ax.plot_surface(x, y, z, linewidth=1, alpha=0.3, color='g')
   
 
   def draw_stratosphere(self, ax):
@@ -67,21 +65,21 @@ class Earth():
     ax.plot_wireframe(x_stratosphere, y_stratosphere, z_stratosphere, linewidth=1, alpha=0.3)
   
   def check_point_in_atmosphere(self, x, y, z):
-    f1 = (x ** 2 + y ** 2 + 10 ** 13) <= (self.stratosphere_high + E_radius) ** 2 # погрешность
-    f2 = (x ** 2 + z ** 2 + 10 ** 13) <= (self.stratosphere_high + E_radius) ** 2 # погрешность
-    f3 = (y ** 2 + z ** 2 + 10 ** 13) <= (self.stratosphere_high + E_radius) ** 2 # погрешность
+    f1 = (x ** 2 + y ** 2 + 10 ** 13) <= (self.stratosphere_high + E_radius) ** 2 # проверка по координатам с погрешностью
+    f2 = (x ** 2 + z ** 2 + 10 ** 13) <= (self.stratosphere_high + E_radius) ** 2 # проверка по координатам с погрешностью
+    f3 = (y ** 2 + z ** 2 + 10 ** 13) <= (self.stratosphere_high + E_radius) ** 2 # проверка по координатам с погрешностью
     return  f1 and f2 and f3
   
   def check_point_in_Earth(self, x, y, z):
-    f1 = (x ** 2 + y ** 2 + 10 ** 13) <= (E_radius) ** 2 # погрешность
-    f2 = (x ** 2 + z ** 2 + 10 ** 13) <= (E_radius) ** 2 # погрешность
-    f3 = (y ** 2 + z ** 2 + 10 ** 13) <= (E_radius) ** 2 # погрешность
+    f1 = (x ** 2 + y ** 2 + 10 ** 13) <= (E_radius) ** 2 # проверка по координатам с погрешностью
+    f2 = (x ** 2 + z ** 2 + 10 ** 13) <= (E_radius) ** 2 # проверка по координатам с погрешностью
+    f3 = (y ** 2 + z ** 2 + 10 ** 13) <= (E_radius) ** 2 # проверка по координатам с погрешностью
     return  f1 and f2 and f3
 
   def check_point_out_orbit(self, x, y, z):
-    f1 = (x ** 2 + y ** 2 + 10 ** 13) >= ((self.orbit_min + E_radius) ** 2) and (x ** 2 + y ** 2 + 10 ** 13) <= ((self.orbit_max + E_radius) ** 2) # погрешность
-    f2 = (x ** 2 + z ** 2 + 10 ** 13) >= ((self.orbit_min + E_radius) ** 2) and (x ** 2 + z ** 2 + 10 ** 13) <= ((self.orbit_max + E_radius) ** 2) # погрешность
-    f3 = (y ** 2 + z ** 2 + 10 ** 13) >= ((self.orbit_min + E_radius) ** 2) and (y ** 2 + z ** 2 + 10 ** 13) <= ((self.orbit_max + E_radius) ** 2) # погрешность
+    f1 = (x ** 2 + y ** 2 + 10 ** 13) >= ((self.orbit_min + E_radius) ** 2) and (x ** 2 + y ** 2 + 10 ** 13) <= ((self.orbit_max + E_radius) ** 2) # проверка по координатам с погрешностью
+    f2 = (x ** 2 + z ** 2 + 10 ** 13) >= ((self.orbit_min + E_radius) ** 2) and (x ** 2 + z ** 2 + 10 ** 13) <= ((self.orbit_max + E_radius) ** 2) # проверка по координатам с погрешностью
+    f3 = (y ** 2 + z ** 2 + 10 ** 13) >= ((self.orbit_min + E_radius) ** 2) and (y ** 2 + z ** 2 + 10 ** 13) <= ((self.orbit_max + E_radius) ** 2) # проверка по координатам с погрешностью
     return  f1 or f2 or f3
 
   def return_data(self):
@@ -91,12 +89,9 @@ class Earth():
 class Satellite():
   def __init__(self):
     self.mass = 420000
-    #self.height = 437 * (10 ** 2)
     self.height = 437 * (10 ** 3)
     self.velocity = 7654
     self.velocity2 = self.velocity + 2346
-    #self.velocity2 = self.velocity + 2346
-    #self.velocity = 7654
     self.time = 90 * 60
     self.time2 = 90 * 60 * 3
 
@@ -114,8 +109,7 @@ class Satellite():
     label_name = "The satellite is located in the Earth's atmosphere: " + str(self.in_e_stratosphere) + '\n'
     label_name += "The satellite is located in the Earth's orbit: " + str(self.in_e_orbit) + '\n'
     label_name += "The satellite has fallen: " + str(self.in_Earth)
-
-    #ax.plot(X, Y, Z, label=str("The satellite is located in the Earth's atmosphere: "+str(E.check_point_in_atmosphere(x, y, z))), color=self.color_orbit[ind], linewidth=1.5)
+    
     ax.plot(X, Y, Z, label=label_name, color=self.color_orbit[ind], linewidth=1.5)
     ax.legend()
     ax.set_xlabel('X [m]')
@@ -130,41 +124,21 @@ class Satellite():
 
 
 fig = plt.figure(figsize=plt.figaspect(0.5)*1.5)
-ax = fig.add_subplot(1, 1, 1, projection='3d')
-#ax.set_box_aspect(aspect=(1,1,1))
-#ax = fig.add_subplot(2, 2, 1, projection='3d')
-
-#Satellite_orbit = 0
+ax = fig.add_subplot(2, 2, 1, projection='3d')
 
 E = Earth()
 S = Satellite()
 
-#ax.scatter(0, 0, 0, marker='o', color='g')
+North = float(input('North coords\n')) % 360
 
-#North = -43.07
-#East = -61.5
-
-#North = float(input()) % 360
-North = -42.07
-
-#East = float(input()) % 90
-East = 50
-
-#ax.set_box_aspect((10 ** 7, 10 ** 7, 10 ** 7))
-
-#x, z = to_coord(E_radius + S.height, 0, East)
-#x, y = to_coord(x, 0, North)
+East = float(input('\nEast coords\n')) % 90
 
 East_standart = 0
-
-#ax.set_box_aspect((10 ** 7, 10 ** 7, 10 ** 7))
 
 x_st, z_st = to_coord(E_radius + S.height, 0, East_standart)
 x_st, y_st = to_coord(x_st, 0, North)
 
 ax.scatter(int(x_st), int(y_st), int(z_st), marker='o', color='k')
-
-#coordinats = [int(x_st), int(y_st), int(z_st)]
 
 E.draw_me(ax, East)
 E.draw_stratosphere(ax)
@@ -192,7 +166,6 @@ for j in range(2):
   potential_enegry = np.zeros(np.shape(trajectory)[0])
 
   for i in range(len(tspan)):
-  #for i in range(1):
     current_time = tspan[i]
 
     current_point = np.array(trajectory[i][:]).transpose()
@@ -206,25 +179,22 @@ for j in range(2):
         S.in_Earth = True
     if not S.in_e_orbit:
       if E.check_point_out_orbit(math.fabs(current_point[0]), math.fabs(current_point[1]), math.fabs(current_point[2])):
-        #print(i, current_point, E_radius)
-        #print(current_point[0] ** 2 + current_point[1] ** 2, (E_radius + E.orbit_min) ** 2, (E_radius + E.orbit_max) ** 2)
         S.in_e_orbit = True
 
     kinetic_enegry[i] = 0.5 * S.mass * np.dot(velocity[i][:], velocity[i][:])
-    #potential_enegry[i] = -1 * G * M * S.mass / np.linalg.norm(current_point)
     potential_enegry[i] = -1 * G * M * S.mass / np.linalg.norm(current_point)
 
   total_energy = potential_enegry + kinetic_enegry
 
   S.draw_self_orbit(ax, trajectory_corrected, j)
 
-  #ax2 = fig.add_subplot(2, 2, 2 + j)
+  ax2 = fig.add_subplot(2, 2, 2 + j)
 
-  #ax2.plot(tspan, kinetic_enegry, 'r', label="kinetic")
-  #ax2.plot(tspan, potential_enegry, 'b', label="potential")
-  #ax2.plot(tspan, total_energy, 'k', label="total")
-  #ax2.legend()
-  #ax2.set_title(['change in total energy: ' + S.color_orbit[j] + ' orbit', total_energy[-1] - total_energy[0]])
+  ax2.plot(tspan, kinetic_enegry, 'r', label="kinetic")
+  ax2.plot(tspan, potential_enegry, 'b', label="potential")
+  ax2.plot(tspan, total_energy, 'k', label="total")
+  ax2.legend()
+  ax2.set_title(['change in total energy: ' + S.color_orbit[j] + ' orbit', total_energy[-1] - total_energy[0]])
 
 ax.axis('scaled')
 plt.show()
