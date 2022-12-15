@@ -90,8 +90,8 @@ class Satellite():
   def __init__(self):
     self.mass = 420000
     self.height = 437 * (10 ** 3)
-    self.velocity = 7654
-    self.velocity2 = self.velocity + 2346
+    self.velocity = 8000
+    self.velocity2 = 10000
     self.time = 90 * 60
     self.time2 = 90 * 60 * 3
 
